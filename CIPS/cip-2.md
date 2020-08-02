@@ -1,6 +1,6 @@
 ---
 eip: 2
-title: Funneled Circle Business Accounts
+title: Funnelled Circle Business Accounts
 author: Julio Moros <jjmorosr@gmail.com>
 discussions-to: https://discord.com/channels/473781666251538452/720664509982703687
 status: Draft
@@ -20,7 +20,7 @@ This kind of accounts may allow to business to offer to the public tokenized sha
 
 ## Abstract
 
-Because the code of Circle's exclusive payment platform, as a result of seven years of experience in payment processing, is a proprietary code, and by virtue of the timely acceptance of suggestions from customers and users, which frequently results in the benefit of companies, the following suggestion is presented to enable Circle Business Accounts with a single channel to liquidate funds: the Funneled Account.
+Because the code of Circle's exclusive payment platform, as a result of seven years of experience in payment processing, is a proprietary code, and by virtue of the timely acceptance of suggestions from customers and users, which frequently results in the benefit of companies, the following suggestion is presented to enable Circle Business Accounts with a single channel to liquidate funds: the Funnelled Account.
 
 These type of accounts will be able to receive payments from whatever many internal wallets are created inside the Circle API master wallet (through debit and credit cards), and receive payments in USDC from the blockchain from whatever many addres created for the internal wallets of the platform.
 
@@ -49,7 +49,7 @@ When a merchant (or a group of associates) requests a Funnelled Account, the req
 
 All Circle Business Accounts are stored in a database, with a unique correspondence to a secret API-KEY. When a Funnelled Account is approved, the Circle team includes the address of the deployed smart contract provided in the account request, associated to this API-KEY.
 
-All Circle Business Accounts would have a Boolean flag associated whit them, which by default would be "false" (in order to facilitate the backwards compatibility). In the case of Funnelled Accounts, this flag will be "true", to identify them. In that case, the smart contract address data will be a field required by the database, and to be provided only by the Circle team by the time of creation of the funnelled business account.
+All Circle's Business Accounts would have a Boolean flag associated with them, which by default would be "false" (in order to facilitate the backwards compatibility). In that case, the smart contract address data will be a field required by the database, and to be provided only by the Circle team by the time of creation of the funnelled business account. This address parameter won't be able to be changed, after the account creation.
 
 ### Request Functions Changed
 
@@ -65,7 +65,7 @@ N°2: The `POST /transfer`request. All requests to this command from the API-KEY
 ``` 
 
 Should always get an error as response. Something like: "`funneled account, please fill a request for a general purpose account`".
-Only the requests to this command from the API-KEY of a Funnelled Account, that includes in the field `"type":` the value of `"blockchain"`, and in the field of `"address"` includes de right address of the smart contract associated to the Funnelled Account should result in a succesfull request:
+Only the requests to this command from the API-KEY of a Funnelled Account, that includes in the field `"type":` the value of `"blockchain"`, and if in the field of `"address"` it includes de right address value of the smart contract associated to the Funnelled Account, it should result in a succesfull request:
 
 ```json
 "destination": {
@@ -75,21 +75,20 @@ Only the requests to this command from the API-KEY of a Funnelled Account, that 
 } 
 ``` 
 
+Otherwise, the response returned by the Circle payment platform API, to the requests generated from the API-KEY of a Funnelled Account, must be an error message, and the request must be repudiated from the Circle's platform. Something like: "`funneled account, please fill a request for a general purpose account`".
+
 ## Rationale
 
-User pain points:
+The currently existing alternatives for the tokenization of shares by small and medium-size companies, which can be offered to the public, through some mechanism that save them from the cumbersome process of the bureaucracy of regulatory entities, are practically non-existent in the market of financial services; such alternatives clearly are not within the current state of the art.
 
-Using signed messages, specially combined with an account contract that holds funds, and multiple disposable ether-less keys that can sign on its behalf, solves many of these pain points.
+The implementation of channeled accounts would give Circle an unmatched competitive advantage in this field of financial services, and would translate into a significant increase of its demand for its services.
 
 ### Usage examples
 
-This scheme opens up a great deal of possibilities on interaction as well as different experiments on business models:
+There are endless possibilities of use for this idea, but below I will present at least two:
 
-* Apps can create individual identities contract for their users which holds the actual funds and then create a different private key for each device they log into. Other apps can use the same identity and just ask to add permissioned public keys to manage the device, so that if one individual key is lost, no ether is lost.
-* An app can create its own token and only charge their users in its internal currency for any ethereum transaction. The currency units can be rounded so it looks more similar to to actual amount of transactions: a standard transaction always costs 1 token, a very complex transaction costs exactly 2, etc. Since the app is the issuer of the transactions, they can do their own Sybil verifications and give a free amount of currency units to new users to get them started.
-* A game company creates games with a traditional monthly subscription, either by credit card or platform-specific microtransactions. Private keys never leave the device and keep no ether and only the public accounts are sent to the company. The game then signs transactions on the device with gas price 0, sends them to the game company which checks who is an active subscriber and batches all transactions and pays the ether themselves. If the company goes bankrupt, the gamers themselves can set up similar subscription systems or just increase the gas price. End result is a **ethereum based game in which gamers can play by spending apple, google or xbox credits**.
-* A standard token is created that doesn’t require its users to have ether, and instead allows tokens to be transferred by paying in tokens. A wallet is created that signs messages and send them via whisper to the network, where other nodes can compete to download the available transactions, check the current gas price, and select those who are paying enough tokens to cover the cost. **The result is a token that the end users never need to keep any ether and can pay fees in the token itself.**
-* A DAO is created with a list of accounts of their employees. Employees never need to own ether, instead they sign messages, send them to whisper to a decentralized list of relayers which then deploy the transactions. The DAO contract then checks if the transaction is valid and sends ether to the deployers. Employees have an incentive not to use too many of the companies resources because they’re identifiable.  The result is that the users of the DAO don't need to keep ether, and **the contract ends up paying for it's own gas usage**.
+* _Payroll Implementation_: Apps can create individual identities contract for their users which holds the actual funds and then create a different private key for each device they log into. Other apps can use the same identity and just ask to add permissioned public keys to manage the device, so that if one individual key is lost, no ether is lost.
+* _Dividend Distribution_: its own token and only charge their users in its internal currency for any ethereum transaction. The currency units can be rounded so it looks more similar to to actual amount of transactions: a standard transaction always costs 1 token, a very complex transaction costs exactly 2, etc. Since the app is the issuer of the transactions, they can do their own Sybil verifications and give a free amount of currency units to new users to get them started.
 
 ## Backwards Compatibility
 

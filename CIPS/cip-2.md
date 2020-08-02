@@ -11,7 +11,6 @@ created: 2020-08-01
 ---
 
 
-
 ## Simple Summary
 
 A standard interface for gas abstraction in top of smart contracts. 

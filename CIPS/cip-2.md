@@ -87,24 +87,23 @@ The implementation of channeled accounts would give Circle an unmatched competit
 
 There are endless possibilities of use for this idea, but below I will present at least two:
 
-* _Payroll Implementation_: Apps can create individual identities contract for their users which holds the actual funds and then create a different private key for each device they log into. Other apps can use the same identity and just ask to add permissioned public keys to manage the device, so that if one individual key is lost, no ether is lost.
-* _Dividend Distribution_: its own token and only charge their users in its internal currency for any ethereum transaction. The currency units can be rounded so it looks more similar to to actual amount of transactions: a standard transaction always costs 1 token, a very complex transaction costs exactly 2, etc. Since the app is the issuer of the transactions, they can do their own Sybil verifications and give a free amount of currency units to new users to get them started.
+* _Payroll Implementation_: A group of associates decides to create a cooperative transportation company, but members who work for the cooperative demand to be sure that the company's profits are fairly distributed and that payments to suppliers, services and taxes are transparent processes. This [contract](https://github.com/jjmr007/CIPs/blob/master/assets/cip-2/payroll/Payroll.sol) reflects this situation, which is only possible when the Circle Business Account is of the "Funnelled" type. And in this [document](https://github.com/jjmr007/CIPs/blob/master/assets/cip-2/payroll/README.md) a brief review of the contract is made.
+* _Dividend Distribution_: A civil association in Panama decides to contract the services of a construction company to develop a complex "mall" type shopping center. For this they decide to rise the funds through a process and a contract type [DAICO](https://ethresear.ch/t/explanation-of-daicos/465) (not shown in this proposal). Upon successful completion of the work, each member of the civil association has a token (which in this [contract](https://github.com/jjmr007/CIPs/blob/master/assets/cip-2/payroll/Payroll.sol) is referred to as the Type B token) with which they can go to the referred dividend distribution contract to collect their royalties, in USDC currency (which in the referred contract is mentioned to as type A token). The Circle API acdept payments from of both merchants' debit and credit cards for the pay of the rent of their commercial shops of the shopping center. But only through a funnelled account it is possible to guarantee to the shareholders (or holders of type B tokens) that they will be receiving the true dividends from the payment of rents. The following [document](https://github.com/jjmr007/CIPs/blob/master/assets/cip-2/payroll/README.md) provides a brief explanation of the contract. WARNING: These contracts are merely illustrative examples and their use in production is not recommended until they go through an adequate testing process.
 
 ## Backwards Compatibility
 
-There is no issues with backwards compatibility, however for future upgrades, as `_execData` contains arbitrary data evaluated by the account contract, it's up to the contract to handle properly this data and therefore contracts can gas relay any behavior with the current interface.
+There are two potential risks in backwards compatibility:
+
+1.- The assignment of a boolean flag to each new account / secret API-KEY, which is a parameter that is assumed to be still non-existent. To improve the probability of backwards compatibility, general purpose accounts (or "normal" accounts) will have this flag associated with "false" and only funnelled accounts will have this flag associated with "true".
+2.- The assignment of the only blockchain address to which a funnelled account can withdraw funds. "Normal" accounts that previously did not have a value for this new field can assume a NULL value or the address 0x0000000000000000000000000000000000000000; then funnelled accounts would receive a significant value for this field (the associated smart contract address). However, this development depends on the particularities of the database of the proprietary code of the Circle payment platform.
 
 ## Implementation
 
-One initial implementation of such a contract can be found at [Status.im account-contracts repository](https://github.com/status-im/account-contracts/blob/develop/contracts/account/AccountGasAbstract.sol)
-
-Other version is implemented as Gnosis Safe variant in: https://github.com/status-im/safe-contracts
+It is hoped that if a proposal like this is accepted, upon acceptance of the draft and within a reasonable amount of time, the Circle team will be able to generate a fork of your available code in a "Funnelled-Related-Sand-Box". And after the due discussion and tests, if no bugs are found, it can be integrated into the main Sand-Box. Finnally, if it is accepted by Circle staff ant the community, the code will be merged to the main Circle payment system platform.
 
 ## Security Considerations
 
-Deployers of transactions (relayers) should be able to call untrusted contracts, which provides no guarantees that the contract they are interacting with correctly implements the standard and they will be reimbursed for gas. To prevent being fooled by bad implementations, relayers must **estimate the outcome of a transaction**, and only include/sign transactions which have a desired outcome. 
-
-Is also interest of relayers to maintaining a private reputation of contracts they interact with, as well as keep track of which tokens and for which `gasPrice` they’re willing to deploy transactions.
+Security considerations are exclusively on the side of changes to Circle's proprietary code, as none other changes are suggested to any other application.
 
 ## Copyright
 

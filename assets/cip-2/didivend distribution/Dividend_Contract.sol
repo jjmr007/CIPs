@@ -97,7 +97,7 @@ contract Dividend {
             Delta = block.number.sub(_uSerDividends[_from].userBlock);
         }
         _uSerDividends[_from].userBlock = block.number;
-        _uSerDividends[_from].dividend_Burnable += Delta.mul(_uSerDividends[_from].lastBalance);
+        _uSerDividends[_from].dividend_Burnable = _uSerDividends[_from].dividend_Burnable.add(Delta.mul(_uSerDividends[_from].lastBalance));
         _uSerDividends[_from].lastBalance = _TokenB.balanceOf(_from).sub(_aMount);
         
         if (_uSerDividends[_to].userBlock == 0) {
@@ -106,7 +106,7 @@ contract Dividend {
             Delta = block.number.sub(_uSerDividends[_to].userBlock);
         }
         _uSerDividends[_to].userBlock = block.number;
-        _uSerDividends[_to].dividend_Burnable += Delta.mul(_uSerDividends[_to].lastBalance);
+        _uSerDividends[_to].dividend_Burnable = _uSerDividends[_to].dividend_Burnable.add(Delta.mul(_uSerDividends[_to].lastBalance));
         _uSerDividends[_to].lastBalance = _TokenB.balanceOf(_to).add(_aMount);
 
     }
@@ -135,8 +135,8 @@ contract Dividend {
         
         require (tx.origin == msg.sender || (isContract(_Alpha) && _Alpha != 0x0000000000000000000000000000000000000000));
         FlaG = true;
-        if (!isContract(_Alpha) && _Alpha != 0x0000000000000000000000000000000000000000) {
-        _Alpha = msg.sender; }
+        if (!isContract(_Alpha)) {
+        require(_Alpha == msg.sender); }
         uint256 _N = block.number.sub(sTart).mul(Total_B);
         uint256 Delta;
         if (_uSerDividends[_Alpha].userBlock == 0) {
@@ -145,18 +145,18 @@ contract Dividend {
             Delta = block.number.sub(_uSerDividends[_Alpha].userBlock);
         }
         _uSerDividends[_Alpha].userBlock = block.number;
-        _uSerDividends[_Alpha].dividend_Burnable += Delta.mul(_uSerDividends[_Alpha].lastBalance);
+        _uSerDividends[_Alpha].dividend_Burnable = _uSerDividends[_Alpha].dividend_Burnable.add(Delta.mul(_uSerDividends[_Alpha].lastBalance));
         uint256 paYment; 
         require(_N.sub(Total_tB)>=0);
         if (_N.sub(Total_tB)>0) {
         paYment = Total_A.mul(_uSerDividends[_Alpha].dividend_Burnable).div(_N.sub(Total_tB));  
-        Total_tB += _uSerDividends[_Alpha].dividend_Burnable;
+        Total_tB = Total_tB.add(_uSerDividends[_Alpha].dividend_Burnable);
         }
         else {
             paYment = 0;
             sTart = block.number;
         }
-        Total_A -= paYment;
+        Total_A = Total_A.sub(paYment);
         _uSerDividends[_Alpha].dividend_Burnable = 0;
         _TokenA.transfer(_Alpha, paYment);
         FlaG = false;

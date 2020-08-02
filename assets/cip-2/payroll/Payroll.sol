@@ -28,7 +28,10 @@ contract Payroll {
     Token public _Token;
 
     constructor (address _token) public payable {
+        
+        // the list of initial associates of the business
         eMployees = [0x14723A09ACff6D2A60DcdF7aA4AFf308FDDC160C, 0x4B0897b0513fdC7C541B6d9D7E929C4e5364D2dB, 0x583031D1113aD414F02576BD6afaBfb302140225, 0xdD870fA1b7C4700F2BD7f44238821C26f7392148];
+        // the chief executive oficier, designated by the associates
         Boss = msg.sender;
         Flag = true;
         Penalty = false;
@@ -41,6 +44,11 @@ contract Payroll {
         wEek[5] = "Saturday";
         wEek[6] = "Sunday";
         _Token = Token(_token);
+        // the only address allowed to supply payments to this contract
+        // for USDC platform in ropsten this address is usually 0x75C0c372da875a4Fc78E8A37f58618a6D18904e8
+        // but this parameter shudl be assesed by the Circle's team to help the client request
+        // this avoid certain legal issues like tax evasion, when the "official" payment channel is properly defined
+        paYer = 0x75C0c372da875a4Fc78E8A37f58618a6D18904e8;      
 
     }
 

@@ -55,9 +55,9 @@ All Circle's Business Accounts would have a Boolean flag associated with them, w
 
 Only the responses of two functions or commands of API requests to Circle's payment protocol will be modified, in the case of Funnelled Accounts.
 
-N°1: The `POST /wire` request. All requests to this command from the API-KEY of a Funnelled Account should get an error as response. Something like: "`funneled account, please fill a request for a general purpose account`".
+N°1: The **`POST /wire`** request. All requests to this command from the API-KEY of a Funnelled Account should get an error as response. Something like: "`funneled account, please fill a request for a general purpose account`".
 
-N°2: The `POST /transfer`request. All requests to this command from the API-KEY of a Funnelled Account that includes in the field `"type":` the value of `"wallet"`:
+N°2: The **`POST /transfer`** request. All requests to this command from the API-KEY of a Funnelled Account that includes in the field `"type":` the value of `"wallet"`:
 
 ```json
 "destination": {

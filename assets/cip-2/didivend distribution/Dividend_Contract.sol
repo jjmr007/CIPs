@@ -43,6 +43,8 @@ contract Dividend {
     constructor (address _a, address _b, address _paYer) public {
         
         // the only address allowed to supply payments to this contract
+        // for USDC platform in ropsten this address is usually 0x75C0c372da875a4Fc78E8A37f58618a6D18904e8
+        // but this parameter shudl be assesed by the Circle's team to help the client request
         paYer = _paYer;
         
         sTart = block.number;
@@ -68,7 +70,7 @@ contract Dividend {
     function Payment (uint256 _aMount) OnlypaYer public {
         
         _TokenA.transferFrom(paYer, address(this), _aMount);
-        Total_A += _aMount;
+        Total_A = Total_A.add(_aMount);
         
     }
     
@@ -121,10 +123,20 @@ contract Dividend {
         
     }
     
-    function CollectDividends() OnlyFalse public {
+    function isContract(address _Alpha) private view returns (bool) {
+        uint codeSize;
+        assembly {
+            codeSize := extcodesize(_Alpha)
+        }
+        return codeSize > 0;
+    }
+    
+    function CollectDividends(address _Alpha) OnlyFalse public {
         
+        require (tx.origin == msg.sender || (isContract(_Alpha) && _Alpha != 0x0000000000000000000000000000000000000000));
         FlaG = true;
-        address _Alpha = msg.sender;
+        if (!isContract(_Alpha) && _Alpha != 0x0000000000000000000000000000000000000000) {
+        _Alpha = msg.sender; }
         uint256 _N = block.number.sub(sTart).mul(Total_B);
         uint256 Delta;
         if (_uSerDividends[_Alpha].userBlock == 0) {

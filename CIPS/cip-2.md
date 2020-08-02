@@ -26,7 +26,7 @@ These type of accounts will be able to receive payments from whatever many inter
 
 However, funds cannot be withdrawn from these accounts, but only to a single smart contract, the address of which will be provided by the merchant when requesting the account.
 
-This contract must be previously deployed on the blockchain for the Circle team to accept the creation of the funnelled account, and the code of it must be checked at least in etherscan, in addition to providing some type of audit (in which the Circle team can assist customer).
+This contract must be previously deployed on the blockchain for the Circle team to accept the creation of the Funnelled Account, and the code of it must be checked at least in etherscan, in addition to providing some type of audit (in which the Circle team can assist customer).
 
 This will allow tokenize the shares of any business, no matter how small it is, since the income from a commercial activity will be publicly viewed and auditable, without the possibility of deceiving shareholders.
 
@@ -45,9 +45,9 @@ And this is the reason that justifies the existence of Funnelled Accounts.
 
 ### Procedure for the Creation of a New Funnelled Account
 
-When a merchant (or a group of associates) requests a funnelled account, the request, in addition to covering the legal details of their jurisdiction, must provide the code of a smart contract, some audit of the code and assistance of Circle staff (if it is required) to deploy this contract in the Ethereum mainnet prior to the approval of the funnelled account.
+When a merchant (or a group of associates) requests a Funnelled Account, the request, in addition to covering the legal details of their jurisdiction, must provide the code of a smart contract, some audit of the code and assistance of Circle staff (if it is required) to deploy this contract in the Ethereum mainnet prior to the approval of the Funnelled Account.
 
-All Circle Business Accounts are stored in a database, with a unique correspondence to a secret API-KEY. When a funnelled account is approved, the Circle team includes the address of the deployed smart contract provided in the account request, associated to this API-KEY.
+All Circle Business Accounts are stored in a database, with a unique correspondence to a secret API-KEY. When a Funnelled Account is approved, the Circle team includes the address of the deployed smart contract provided in the account request, associated to this API-KEY.
 
 All Circle Business Accounts would have a Boolean flag associated whit them, which by default would be "false" (in order to facilitate the backwards compatibility). In the case of Funnelled Accounts, this flag will be "true", to identify them. In that case, the smart contract address data will be a field required by the database, and to be provided only by the Circle team by the time of creation of the funnelled business account.
 
@@ -55,9 +55,9 @@ All Circle Business Accounts would have a Boolean flag associated whit them, whi
 
 Only the responses of two functions or commands of API requests to Circle's payment protocol will be modified, in the case of Funnelled Accounts.
 
-N°1: The `POST /wire` request. All requests to this command from the API-KEY of a funnelled account should get an error as response. Something like: "`funneled account, please fill a request for a general purpose account`".
+N°1: The `POST /wire` request. All requests to this command from the API-KEY of a Funnelled Account should get an error as response. Something like: "`funneled account, please fill a request for a general purpose account`".
 
-N°2: The `POST /transfer`request. All requests to this command from the API-KEY of a funnelled account that includes in the field `"type":` the value of `"wallet"`:
+N°2: The `POST /transfer`request. All requests to this command from the API-KEY of a Funnelled Account that includes in the field `"type":` the value of `"wallet"`:
 
 ```json
 "destination": {
@@ -65,7 +65,7 @@ N°2: The `POST /transfer`request. All requests to this command from the API-KEY
 ``` 
 
 Should always get an error as response. Something like: "`funneled account, please fill a request for a general purpose account`".
-Only the requests to this command from the API-KEY of a funnelled account, that includes in the field `"type":` the value of `"blockchain"`, and in the field of `"address"` includes de right address of the smart contract associated to the funnelled account should result in a succesfull request:
+Only the requests to this command from the API-KEY of a Funnelled Account, that includes in the field `"type":` the value of `"blockchain"`, and in the field of `"address"` includes de right address of the smart contract associated to the Funnelled Account should result in a succesfull request:
 
 ```json
 "destination": {

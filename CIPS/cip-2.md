@@ -20,7 +20,7 @@ This kind of accounts may allow to business to offer to the public tokenized sha
 
 ## Abstract
 
-Because the code of Circle's exclusive payment platform, as a result of seven years of experience in payment processing, is a proprietary code, and by virtue of the timely acceptance of suggestions from customers and users, which frequently results in For the benefit of companies, the following suggestion is presented to enable Circle business accounts with a single channel to liquidate funds: the Funneled Account.
+Because the code of Circle's exclusive payment platform, as a result of seven years of experience in payment processing, is a proprietary code, and by virtue of the timely acceptance of suggestions from customers and users, which frequently results in the benefit of companies, the following suggestion is presented to enable Circle Business Accounts with a single channel to liquidate funds: the Funneled Account.
 
 These type of accounts will be able to receive payments from whatever many internal wallets are created inside the Circle API master wallet (through debit and credit cards), and receive payments in USDC from the blockchain from whatever many addres created for the internal wallets of the platform.
 
@@ -32,13 +32,13 @@ This will allow tokenize the shares of any business, no matter how small it is, 
 
 ## Motivation
 
-So far, only large companies -and after strict regulatory processes- can become public, offering their shares to the public. Through funnelled accounts, Circle would open the doors to tokenization of shares for small and medium-sized companies, who could do it with virtually no oversight from regulatory agencies in many jurisdictions.
+So far, only large companies -and after strict regulatory processes- can become public, offering their shares to the public. Through Funnelled Accounts, Circle would open the doors to tokenization of shares for small and medium-sized companies, who could do it with virtually no oversight from regulatory agencies in many jurisdictions.
 
 This is because the "raison d'être" of most regulatory laws is shareholder protection, seeking to establish mechanisms that prevent a company from diverting funds from its commercial activity to avoid the payment and recognition of dividends.
 
 If funds from a commercial activity can only be transfered to a smart contract, which autonomously enforces promises of an agreement translated into lines of code, then the risk of shareholder fraud would be resolved, without the need for regulatory intervention.
 
-And this is the reason that justifies the existence of funnelled accounts.
+And this is the reason that justifies the existence of Funnelled Accounts.
 
 
 ## Specification 
@@ -49,11 +49,11 @@ When a merchant (or a group of associates) requests a funnelled account, the req
 
 All Circle Business Accounts are stored in a database, with a unique correspondence to a secret API-KEY. When a funnelled account is approved, the Circle team includes the address of the deployed smart contract provided in the account request, associated to this API-KEY.
 
-All Circle Business Accounts would have a Boolean flag associated whit them, which by default would be "false" (in order to facilitate the backwards compatibility). In the case of funnelled accounts, this flag will be "true", to identify them. In that case, the smart contract address data will be a field required by the database, and to be provided only by the Circle team by the time of creation of the funnelled business account.
+All Circle Business Accounts would have a Boolean flag associated whit them, which by default would be "false" (in order to facilitate the backwards compatibility). In the case of Funnelled Accounts, this flag will be "true", to identify them. In that case, the smart contract address data will be a field required by the database, and to be provided only by the Circle team by the time of creation of the funnelled business account.
 
 ### Request Functions Changed
 
-Only the responses of two functions or commands of API requests to Circle's payment protocol will be modified, in the case of funnelled accounts.
+Only the responses of two functions or commands of API requests to Circle's payment protocol will be modified, in the case of Funnelled Accounts.
 
 N°1: The `POST /wire` request. All requests to this command from the API-KEY of a funnelled account should get an error as response. Something like: "`funneled account, please fill a request for a general purpose account`".
 

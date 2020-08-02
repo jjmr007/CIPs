@@ -1,4 +1,3 @@
-
 ---
 eip: 2
 title: Funneled Circle Business Accounts

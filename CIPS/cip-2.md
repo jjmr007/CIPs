@@ -1,66 +1,95 @@
+
 ---
 eip: 2
-title: Homestead Hard-fork Changes
-author: Vitalik Buterin <v@buterin.com>
-status: Final
+title: Funneled Circle Business Accounts
+author: Julio Moros <jjmorosr@gmail.com>
+discussions-to: https://discord.com/channels/473781666251538452/720664509982703687
+status: Draft
 type: Standards Track
 category: Core
-created: 2015-11-15
+created: 2020-08-01
 ---
 
-### Meta reference
 
-[Homestead](https://github.com/ethereum/EIPs/blob/master/EIPS/eip-606.md).
 
-### Parameters
+## Simple Summary
 
-|   FORK_BLKNUM   | CHAIN_NAME  |
-|-----------------|-------------|
-|    1,150,000    | Main net    |
-|   494,000       | Morden      |
-|    0            | Future testnets    |
+A standard interface for gas abstraction in top of smart contracts. 
 
-# Specification
+Allows users to offer [EIP-20] token for paying the gas used in a call. 
 
-If `block.number >= HOMESTEAD_FORK_BLKNUM`, do the following:
+## Abstract
 
-1. The gas cost *for creating contracts via a transaction* is increased from 21,000 to 53,000, i.e. if you send a transaction and the to address is the empty string, the initial gas subtracted is 53,000 plus the gas cost of the tx data, rather than 21,000 as is currently the case. Contract creation from a contract using the `CREATE` opcode is unaffected.
-2. All transaction signatures whose s-value is greater than `secp256k1n/2` are now considered invalid. The ECDSA recover precompiled contract remains unchanged and will keep accepting high s-values; this is useful e.g. if a contract recovers old Bitcoin signatures.
-3. If contract creation does not have enough gas to pay for the final gas fee for adding the contract code to the state, the contract creation fails (i.e. goes out-of-gas) rather than leaving an empty contract.
-4. Change the difficulty adjustment algorithm from the current formula: `block_diff = parent_diff + parent_diff // 2048 * (1 if block_timestamp - parent_timestamp < 13 else -1) + int(2**((block.number // 100000) - 2))` (where the `int(2**((block.number // 100000) - 2))` represents the exponential difficulty adjustment component) to `block_diff = parent_diff + parent_diff // 2048 * max(1 - (block_timestamp - parent_timestamp) // 10, -99) + int(2**((block.number // 100000) - 2))`, where `//` is the integer division operator, eg. `6 // 2 = 3`, `7 // 2 = 3`, `8 // 2 = 4`. The `minDifficulty` still defines the minimum difficulty allowed and no adjustment may take it below this.
+A main barrier for adoption of DApps is the requirement of multiple tokens for executing in chain actions. Allowing users to sign messages to show intent of execution, but allowing a third party relayer to execute them can circumvent this problem, while ETH will always be required for ethereum transactions, it's possible for smart contract to take [EIP-191] signatures and forward a payment incentive to an untrusted party with ETH for executing the transaction. 
 
-# Rationale
+## Motivation
 
-Currently, there is an excess incentive to create contracts via transactions, where the cost is 21,000, rather than contracts, where the cost is 32,000. Additionally, with the help of suicide refunds, it is currently possible to make a simple ether value transfer using only 11,664 gas; the code for doing this is as follows:
+Standardizing a common format for them, as well as a way in which the user allows the transaction to be paid in tokens, gives app developers a lot of flexibility and can become the main way in which app users interact with the Blockchain.
 
-```python
-from ethereum import tester as t
-> from ethereum import utils
-> s = t.state()
-> c = s.abi_contract('def init():\n suicide(0x47e25df8822538a8596b28c637896b4d143c351e)', endowment=10**15)
-> s.block.get_receipts()[-1].gas_used
-11664
-> s.block.get_balance(utils.normalize_address(0x47e25df8822538a8596b28c637896b4d143c351e))
-1000000000000000
-```
-This is not a particularly serious problem, but it is nevertheless arguably a bug.
 
-Allowing transactions with any s value with `0 < s < secp256k1n`, as is currently the case, opens a transaction malleability concern, as one can take any transaction, flip the s value from `s` to `secp256k1n - s`, flip the v value (`27 -> 28`, `28 -> 27`), and the resulting signature would still be valid. This is not a serious security flaw, especially since Ethereum uses addresses and not transaction hashes as the input to an ether value transfer or other transaction, but it nevertheless creates a UI inconvenience as an attacker can cause the transaction that gets confirmed in a block to have a different hash from the transaction that any user sends, interfering with user interfaces that use transaction hashes as tracking IDs. Preventing high s values removes this problem.
+## Specification 
 
-Making contract creation go out-of-gas if there is not enough gas to pay for the final gas fee has the benefits that:
-- (i) it creates a more intuitive "success or fail" distinction in the result of a contract creation process, rather than the current "success, fail, or empty contract" trichotomy;
-- (ii) makes failures more easily detectable, as unless contract creation fully succeeds then no contract account will be created at all; and
-- (iii) makes contract creation safer in the case where there is an endowment, as there is a guarantee that either the entire initiation process happens or the transaction fails and the endowment is refunded.
+### Request Functions Changed
 
-The difficulty adjustment change conclusively solves a problem that the Ethereum protocol saw two months ago where an excessive number of miners were mining blocks that contain a timestamp equal to `parent_timestamp + 1`; this skewed the block time distribution, and so the current block time algorithm, which targets a *median* of 13 seconds, continued to target the same median but the mean started increasing. If 51% of miners had started mining blocks in this way, the mean would have increased to infinity. The proposed new formula is roughly based on targeting the mean; one can prove that with the formula in use, an average block time longer than 24 seconds is mathematically impossible in the long term.
+After signature validation, the evaluation of `_execBytes` is up to the account contract implementation, it's role of the wallet to properly use the account contract and it's gas relay method. 
+A common pattern is to expose an interface which can be only called by the contract itself. The `_execBytes` could entirely forward the call in this way, as example: `address(this).call.gas(_gasLimit)(_execData);`
+Where `_execData` could call any method of the contract itself, for example:
 
-The use of `(block_timestamp - parent_timestamp) // 10` as the main input variable rather than the time difference directly serves to maintain the coarse-grained nature of the algorithm, preventing an excessive incentive to set the timestamp difference to exactly 1 in order to create a block that has slightly higher difficulty and that will thus be guaranteed to beat out any possible forks. The cap of -99 simply serves to ensure that the difficulty does not fall extremely far if two blocks happen to be very far apart in time due to a client security bug or other black-swan issue.
+- `call(address to, uint256 value, bytes data)`:  allow any type of ethereum call be performed; 
+- `create(uint256 value, bytes deployData)`: allows create contract 
+- `create2(uint256 value, bytes32 salt, bytes deployData)`: allows create contract with deterministic address 
+- `approveAndCall(address token, address to, uint256 value, bytes data)`: allows safe approve and call of an ERC20 token.
+- `delegatecall(address codeBase, bytes data)`: allows executing code stored on other contract
+- `changeOwner(address newOwner)`: Some account contracts might allow change of owner
+- `foo(bytes bar)`: Some account contracts might have custom methods of any format.
 
-# Implementation
+The standardization of account contracts is not scope of this ERC, and is presented here only for illustration on possible implementations. 
+Using a self call to evaluate `_execBytes` is not mandatory, depending on the account contract logic, the evaluation could be done locally. 
 
-This is implemented in Python here:
+## Rationale
 
-1. https://github.com/ethereum/pyethereum/blob/d117c8f3fd93359fc641fd850fa799436f7c43b5/ethereum/processblock.py#L130
-2. https://github.com/ethereum/pyethereum/blob/d117c8f3fd93359fc641fd850fa799436f7c43b5/ethereum/processblock.py#L129
-3. https://github.com/ethereum/pyethereum/blob/d117c8f3fd93359fc641fd850fa799436f7c43b5/ethereum/processblock.py#L304
-4. https://github.com/ethereum/pyethereum/blob/d117c8f3fd93359fc641fd850fa799436f7c43b5/ethereum/blocks.py#L42
+User pain points:
+
+* users don't want to think about ether
+* users don't want to think about backing up private keys or seed phrases
+* users want to be able to pay for transactions using what they already have on the system, be apple pay, xbox points or even a credit card
+* Users don’t want to sign a new transaction at every move
+* Users don’t want to download apps/extensions (at least on the desktop) to connect to their apps
+
+App developer pain points:
+* Many apps use their own token and would prefer to use those as the main accounting
+* Apps want to be able to have apps in multiple platforms without having to share private keys between devices or have to spend transaction costs moving funds between them
+* Token developers want to be able for their users to be able to move funds and pay fees in the token
+* While the system provides fees and incentives for miners, there are no inherent business model for wallet developers (or other apps that initiate many transactions)
+
+Using signed messages, specially combined with an account contract that holds funds, and multiple disposable ether-less keys that can sign on its behalf, solves many of these pain points.
+
+### Usage examples
+
+This scheme opens up a great deal of possibilities on interaction as well as different experiments on business models:
+
+* Apps can create individual identities contract for their users which holds the actual funds and then create a different private key for each device they log into. Other apps can use the same identity and just ask to add permissioned public keys to manage the device, so that if one individual key is lost, no ether is lost.
+* An app can create its own token and only charge their users in its internal currency for any ethereum transaction. The currency units can be rounded so it looks more similar to to actual amount of transactions: a standard transaction always costs 1 token, a very complex transaction costs exactly 2, etc. Since the app is the issuer of the transactions, they can do their own Sybil verifications and give a free amount of currency units to new users to get them started.
+* A game company creates games with a traditional monthly subscription, either by credit card or platform-specific microtransactions. Private keys never leave the device and keep no ether and only the public accounts are sent to the company. The game then signs transactions on the device with gas price 0, sends them to the game company which checks who is an active subscriber and batches all transactions and pays the ether themselves. If the company goes bankrupt, the gamers themselves can set up similar subscription systems or just increase the gas price. End result is a **ethereum based game in which gamers can play by spending apple, google or xbox credits**.
+* A standard token is created that doesn’t require its users to have ether, and instead allows tokens to be transferred by paying in tokens. A wallet is created that signs messages and send them via whisper to the network, where other nodes can compete to download the available transactions, check the current gas price, and select those who are paying enough tokens to cover the cost. **The result is a token that the end users never need to keep any ether and can pay fees in the token itself.**
+* A DAO is created with a list of accounts of their employees. Employees never need to own ether, instead they sign messages, send them to whisper to a decentralized list of relayers which then deploy the transactions. The DAO contract then checks if the transaction is valid and sends ether to the deployers. Employees have an incentive not to use too many of the companies resources because they’re identifiable.  The result is that the users of the DAO don't need to keep ether, and **the contract ends up paying for it's own gas usage**.
+
+## Backwards Compatibility
+
+There is no issues with backwards compatibility, however for future upgrades, as `_execData` contains arbitrary data evaluated by the account contract, it's up to the contract to handle properly this data and therefore contracts can gas relay any behavior with the current interface.
+
+## Implementation
+
+One initial implementation of such a contract can be found at [Status.im account-contracts repository](https://github.com/status-im/account-contracts/blob/develop/contracts/account/AccountGasAbstract.sol)
+
+Other version is implemented as Gnosis Safe variant in: https://github.com/status-im/safe-contracts
+
+## Security Considerations
+
+Deployers of transactions (relayers) should be able to call untrusted contracts, which provides no guarantees that the contract they are interacting with correctly implements the standard and they will be reimbursed for gas. To prevent being fooled by bad implementations, relayers must **estimate the outcome of a transaction**, and only include/sign transactions which have a desired outcome. 
+
+Is also interest of relayers to maintaining a private reputation of contracts they interact with, as well as keep track of which tokens and for which `gasPrice` they’re willing to deploy transactions.
+
+## Copyright
+
+Copyright and related rights waived via [CC0](https://creativecommons.org/publicdomain/zero/1.0/).

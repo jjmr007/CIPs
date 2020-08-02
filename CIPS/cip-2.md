@@ -13,53 +13,72 @@ created: 2020-08-01
 
 ## Simple Summary
 
-A standard interface for gas abstraction in top of smart contracts. 
+Create a new type of Circle Business Account, which may be called "Funnelled Accounts". 
 
-Allows users to offer [EIP-20] token for paying the gas used in a call. 
+Unlike what we could call general purpose accounts from now on, a channeled account can only withdraw funds from the master wallet to a single address of the blockchain, containing a smart contract.
+
+This kind of accounts may allow to business to offer to the public tokenized shares, with a very reduced or null intervention of regulatory bodies.
 
 ## Abstract
 
-A main barrier for adoption of DApps is the requirement of multiple tokens for executing in chain actions. Allowing users to sign messages to show intent of execution, but allowing a third party relayer to execute them can circumvent this problem, while ETH will always be required for ethereum transactions, it's possible for smart contract to take [EIP-191] signatures and forward a payment incentive to an untrusted party with ETH for executing the transaction. 
+Because the code of Circle's exclusive payment platform, as a result of seven years of experience in payment processing, is a proprietary code, and by virtue of the timely acceptance of suggestions from customers and users, which frequently results in For the benefit of companies, the following suggestion is presented to enable Circle business accounts with a single channel to liquidate funds: the Funneled Account.
+
+These type of accounts will be able to receive payments from whatever many internal wallets are created inside the Circle API master wallet (through debit and credit cards), and receive payments in USDC from the blockchain from whatever many addres created for the internal wallets of the platform.
+
+However, funds cannot be withdrawn from these accounts, but only to a single smart contract, the address of which will be provided by the merchant when requesting the account.
+
+This contract must be previously deployed on the blockchain for the Circle team to accept the creation of the funnelled account, and the code of it must be checked at least in etherscan, in addition to providing some type of audit (in which the Circle team can assist customer).
+
+This will allow tokenize the shares of any business, no matter how small it is, since the income from a commercial activity will be publicly viewed and auditable, without the possibility of deceiving shareholders.
 
 ## Motivation
 
-Standardizing a common format for them, as well as a way in which the user allows the transaction to be paid in tokens, gives app developers a lot of flexibility and can become the main way in which app users interact with the Blockchain.
+So far, only large companies -and after strict regulatory processes- can become public, offering their shares to the public. Through funnelled accounts, Circle would open the doors to tokenization of shares for small and medium-sized companies, who could do it with virtually no oversight from regulatory agencies in many jurisdictions.
+
+This is because the "raison d'être" of most regulatory laws is shareholder protection, seeking to establish mechanisms that prevent a company from diverting funds from its commercial activity to avoid the payment and recognition of dividends.
+
+If funds from a commercial activity can only be transfered to a smart contract, which autonomously enforces promises of an agreement translated into lines of code, then the risk of shareholder fraud would be resolved, without the need for regulatory intervention.
+
+And this is the reason that justifies the existence of funnelled accounts.
 
 
 ## Specification 
 
+### Procedure for the Creation of a New Funnelled Account
+
+When a merchant (or a group of associates) requests a funnelled account, the request, in addition to covering the legal details of their jurisdiction, must provide the code of a smart contract, some audit of the code and assistance of Circle staff (if it is required) to deploy this contract in the Ethereum mainnet prior to the approval of the funnelled account.
+
+All Circle Business Accounts are stored in a database, with a unique correspondence to a secret API-KEY. When a funnelled account is approved, the Circle team includes the address of the deployed smart contract provided in the account request, associated to this API-KEY.
+
+All Circle Business Accounts would have a Boolean flag associated whit them, which by default would be "false" (in order to facilitate the backwards compatibility). In the case of funnelled accounts, this flag will be "true", to identify them. In that case, the smart contract address data will be a field required by the database, and to be provided only by the Circle team by the time of creation of the funnelled business account.
+
 ### Request Functions Changed
 
-After signature validation, the evaluation of `_execBytes` is up to the account contract implementation, it's role of the wallet to properly use the account contract and it's gas relay method. 
-A common pattern is to expose an interface which can be only called by the contract itself. The `_execBytes` could entirely forward the call in this way, as example: `address(this).call.gas(_gasLimit)(_execData);`
-Where `_execData` could call any method of the contract itself, for example:
+Only the responses of two functions or commands of API requests to Circle's payment protocol will be modified, in the case of funnelled accounts.
 
-- `call(address to, uint256 value, bytes data)`:  allow any type of ethereum call be performed; 
-- `create(uint256 value, bytes deployData)`: allows create contract 
-- `create2(uint256 value, bytes32 salt, bytes deployData)`: allows create contract with deterministic address 
-- `approveAndCall(address token, address to, uint256 value, bytes data)`: allows safe approve and call of an ERC20 token.
-- `delegatecall(address codeBase, bytes data)`: allows executing code stored on other contract
-- `changeOwner(address newOwner)`: Some account contracts might allow change of owner
-- `foo(bytes bar)`: Some account contracts might have custom methods of any format.
+N°1: The `POST /wire` request. All requests to this command from the API-KEY of a funnelled account should get an error as response. Something like: "`funneled account, please fill a request for a general purpose account`".
 
-The standardization of account contracts is not scope of this ERC, and is presented here only for illustration on possible implementations. 
-Using a self call to evaluate `_execBytes` is not mandatory, depending on the account contract logic, the evaluation could be done locally. 
+N°2: The `POST /transfer`request. All requests to this command from the API-KEY of a funnelled account that includes in the field `"type":` the value of `"wallet"`:
+
+```json
+"destination": {
+"type": "wallet",
+``` 
+
+Should always get an error as response. Something like: "`funneled account, please fill a request for a general purpose account`".
+Only the requests to this command from the API-KEY of a funnelled account, that includes in the field `"type":` the value of `"blockchain"`, and in the field of `"address"` includes de right address of the smart contract associated to the funnelled account should result in a succesfull request:
+
+```json
+"destination": {
+"type": "blockchain",
+"address": "0x<THE_RIGHT_SMART_CONTRACT_ADDRESS_ASSOCIATED_TO_THE_API_KEY>",
+"chain": "ETH"
+} 
+``` 
 
 ## Rationale
 
 User pain points:
-
-* users don't want to think about ether
-* users don't want to think about backing up private keys or seed phrases
-* users want to be able to pay for transactions using what they already have on the system, be apple pay, xbox points or even a credit card
-* Users don’t want to sign a new transaction at every move
-* Users don’t want to download apps/extensions (at least on the desktop) to connect to their apps
-
-App developer pain points:
-* Many apps use their own token and would prefer to use those as the main accounting
-* Apps want to be able to have apps in multiple platforms without having to share private keys between devices or have to spend transaction costs moving funds between them
-* Token developers want to be able for their users to be able to move funds and pay fees in the token
-* While the system provides fees and incentives for miners, there are no inherent business model for wallet developers (or other apps that initiate many transactions)
 
 Using signed messages, specially combined with an account contract that holds funds, and multiple disposable ether-less keys that can sign on its behalf, solves many of these pain points.
 

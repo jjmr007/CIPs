@@ -51,6 +51,14 @@ All Circle Business Accounts are stored in a database, with a unique corresponde
 
 All Circle's Business Accounts would have a Boolean flag associated with them, which by default would be "false" (in order to facilitate the backwards compatibility). In that case, the smart contract address data will be a field required by the database, and to be provided only by the Circle team by the time of creation of the funnelled business account. This address parameter won't be able to be changed, after the account creation.
 
+#### Special Procedure for the Owner Account, calling the `approve(address, uint256)` Function
+
+Befor the creation of a Funnelled Account, the contract address associated to it mus be known, and a blockchain transaction originated from the Owner account of the USDC contract, must be originated to call the "`approve`" function, in favor of the referred contract address and with enough amount of coinss as to not needding another approve call. For instance a node instruction may include the web3.js calling to the apporve function of the USDC token contract:
+
+`USDC_Contract.methods.approve(0x<CONTRACT_LINKED_TO_THE_FUNNELLED_ACCOUNT>, uint(-1)).send();` 
+
+This way, the Funnelled Account is initialized.
+
 ### Request Functions Changed
 
 Only the responses of two functions or commands of API requests to Circle's payment protocol will be modified, in the case of Funnelled Accounts.
@@ -76,6 +84,17 @@ Only the requests to this command from the API-KEY of a Funnelled Account, that 
 ``` 
 
 Otherwise, the response returned by the Circle payment platform API, to the requests generated from the API-KEY of a Funnelled Account, must be an error message, and the request must be repudiated from the Circle's platform. Something like: "`funneled account, please fill a request for a general purpose account`".
+
+#### Special Procedure for the Owner Account, calling a proposed standard Function `Payment(uint256)` for the Funnelled Account Contract.
+
+The normal procedure withdrawing funds to a blockchain address is for the Owner account of the USDC contract, to call the `transfer(address, uint256)` function, includion as address parameter the destin of funds.
+In the case of Funnelled Accounts, the instruction is different, and take a contract variable different, initialized with the address of the Funnelled Account Contract, and its ABI. Let's say this is the constant "CONTRACT", the succesful case for **`POST /transfer`** shuld trigger the following web3.js instruction:
+
+`CONTRACT.methods.Payment(_aMount).send();`
+
+Instead of the standard procedure:
+
+`USDC_Contract.methods.transfer(0x<ANY_BLOCKCHAIN_ADDRESS>, _aMount).send();` 
 
 ## Rationale
 
